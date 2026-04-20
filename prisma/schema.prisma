@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id
+  googleId       String?   @unique @map("google_id")
+  email          String    @unique
+  hashedPassword String    @map("hashed_password")
+  name           String?   @map("full_name")
+  picture        String?   @map("profile_picture")
+  isArtist       Boolean   @default(false) @map("is_artist")
+  userName       String?   @unique @map("user_name")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  sessions       Session[]
+  datasets       Dataset[]
+  audits         AuditResult[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Dataset {
+  id         String   @id @default(uuid())
+  name       String
+  userId     String?  @map("user_id")
+  rawData    Json     @map("raw_data")
+  columns    Json     
+  rowCount   Int      @map("row_count")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  audits     AuditResult[]
+
+  @@map("datasets")
+}
+
+model AuditResult {
+  id                  String   @id @default(uuid())
+  datasetId           String   @map("dataset_id")
+  datasetName         String   @map("dataset_name")
+  userId              String?  @map("user_id")
+  createdAt           DateTime @default(now()) @map("created_at")
+  protectedAttributes String[] @map("protected_attributes")
+  outcomeColumn       String   @map("outcome_column")
+  predictionColumn    String?  @map("prediction_column")
+  
+  metrics             Json
+  proxyCorrelations   Json     @map("proxy_correlations")
+  overallScore        Float    @map("overall_score")
+  overallSeverity     String   @map("overall_severity")
+  groupBreakdown      Json     @map("group_breakdown")
+  recommendations     Json?
+  aiExplanation       Json?    @map("ai_explanation")
+
+  dataset             Dataset  @relation(fields: [datasetId], references: [id], onDelete: Cascade)
+  user                User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_results")
+}

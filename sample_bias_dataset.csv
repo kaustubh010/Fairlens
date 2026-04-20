@@ -1,0 +1,16 @@
+applicant_id,gender,race,age,income,credit_score,loan_approved,predicted_approval,default_probability
+1,Male,White,35,85000,720,1,1,0.15
+2,Female,Black,28,45000,640,0,0,0.45
+3,Female,White,42,92000,750,1,1,0.10
+4,Male,Hispanic,31,52000,660,1,0,0.35
+5,Male,Black,45,68000,690,0,0,0.40
+6,Female,Asian,29,78000,710,1,1,0.20
+7,Male,White,50,110000,780,1,1,0.05
+8,Female,Hispanic,34,48000,630,0,0,0.50
+9,Male,Asian,38,95000,740,1,1,0.12
+10,Female,White,26,42000,650,0,1,0.30
+11,Male,Black,33,58000,670,1,0,0.38
+12,Female,Hispanic,41,65000,680,1,1,0.25
+13,Male,White,29,55000,690,1,1,0.22
+14,Female,Black,37,72000,700,0,0,0.42
+15,Male,Hispanic,46,88000,730,1,1,0.18
