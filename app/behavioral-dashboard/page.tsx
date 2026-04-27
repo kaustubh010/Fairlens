@@ -11,9 +11,7 @@ interface BehavioralAuditSummary {
   createdAt: string;
   overallBss: number;
   probePairsRun: number;
-  provider: string;
-  model: string | null;
-  mode: string;
+  bundle: string;
   categories: Array<{ categoryId: string; title: string; bss: number; probeCount: number }>;
 }
 
@@ -75,7 +73,7 @@ export default function BehavioralDashboardPage() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <div className="text-[13px] text-[#86868b]">
-                        {new Date(a.createdAt).toLocaleString()} · {a.mode} · {a.model ?? a.provider}
+                        {new Date(a.createdAt).toLocaleString()} · {a.bundle} bundle
                       </div>
                       <div className="text-[18px] font-semibold text-[#1d1d1f] dark:text-white mt-1">
                         Overall BSS {a.overallBss}/100

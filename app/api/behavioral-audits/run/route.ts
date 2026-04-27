@@ -1,64 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { BehavioralAuditConfig, BiasCategory } from '@/lib/behavioral/types';
 import { storeBehavioralAudit } from '@/lib/behavioral/store';
-import { runBehavioralAuditOffline, runBehavioralAuditOnline } from '@/lib/behavioral/runner';
-
-type RunRequest =
-  | {
-      config: BehavioralAuditConfig;
-      mode: 'online';
-    }
-  | {
-      config: BehavioralAuditConfig;
-      mode: 'offline';
-      inputs: Array<{ probePairId: string; aText: string; bText: string }>;
-    };
+import { runBehavioralAudit, type OfflineProbePairInput } from '@/lib/behavioral/runner';
 
 function normalizeCategories(categories: unknown): BiasCategory[] {
-  const allowed: BiasCategory[] = [
-    'politics',
-    'religion',
-    'gender',
-    'race_ethnicity',
-    'culture',
-    'socioeconomics',
-  ];
-  const set = new Set(allowed);
+  const allowed = new Set<string>(['politics', 'religion', 'gender', 'race_ethnicity', 'culture', 'socioeconomics']);
   if (!Array.isArray(categories)) return [];
-  return categories.filter((c): c is BiasCategory => typeof c === 'string' && set.has(c as BiasCategory));
+  return categories.filter((c): c is BiasCategory => typeof c === 'string' && allowed.has(c));
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body: RunRequest = await req.json();
-    const config = body.config;
-
-    if (!config) return NextResponse.json({ error: 'Missing config' }, { status: 400 });
-    const categories = normalizeCategories((config as any).categories);
-    if (categories.length === 0) return NextResponse.json({ error: 'Select at least one category' }, { status: 400 });
-
-    const normalizedConfig: BehavioralAuditConfig = {
-      ...config,
-      categories,
-      temperature: typeof config.temperature === 'number' ? config.temperature : 0,
-      runsPerProbe: typeof config.runsPerProbe === 'number' ? config.runsPerProbe : 1,
-      mode: body.mode,
+    const body = await req.json();
+    const { config: rawConfig, inputs } = body as {
+      config: BehavioralAuditConfig;
+      inputs: OfflineProbePairInput[];
     };
 
-    if (body.mode === 'online') {
-      if (normalizedConfig.provider !== 'gemini') {
-        return NextResponse.json({ error: 'Only Gemini online runs are supported.' }, { status: 400 });
-      }
-      if (!normalizedConfig.apiKey || !normalizedConfig.model) {
-        return NextResponse.json({ error: 'Gemini API key and model are required.' }, { status: 400 });
-      }
+    if (!rawConfig) return NextResponse.json({ error: 'Missing config' }, { status: 400 });
+    const categories = normalizeCategories((rawConfig as any).categories);
+
+    const config: BehavioralAuditConfig = {
+      categories,
+      bundle: ['quick', 'full', 'custom'].includes(rawConfig.bundle) ? rawConfig.bundle : 'quick',
+      geminiApiKey: typeof rawConfig.geminiApiKey === 'string' ? rawConfig.geminiApiKey : undefined,
+    };
+
+    if (!Array.isArray(inputs) || inputs.length === 0) {
+      return NextResponse.json({ error: 'No probe inputs provided. Paste at least one response pair.' }, { status: 400 });
     }
 
-    const audit =
-      body.mode === 'offline'
-        ? await runBehavioralAuditOffline(normalizedConfig, body.inputs ?? [])
-        : await runBehavioralAuditOnline(normalizedConfig);
+    // At least some inputs must have non-empty text
+    const hasContent = inputs.some(i => i.aText?.trim() || i.bText?.trim());
+    if (!hasContent) {
+      return NextResponse.json({ error: 'All inputs are empty. Paste model outputs before running.' }, { status: 400 });
+    }
 
+    const audit = await runBehavioralAudit(config, inputs);
     storeBehavioralAudit(audit);
     return NextResponse.json({ success: true, audit });
   } catch (e) {
@@ -66,4 +44,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
-

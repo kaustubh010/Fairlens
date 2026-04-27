@@ -10,9 +10,7 @@ export async function GET() {
       overallBss: a.overallBss,
       categories: a.categories,
       probePairsRun: a.probePairsRun,
-      provider: a.config.provider,
-      model: a.config.model ?? null,
-      mode: a.config.mode,
+      bundle: a.config.bundle,
     })),
   });
 }
