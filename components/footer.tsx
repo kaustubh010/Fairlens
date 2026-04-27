@@ -16,9 +16,10 @@ export function Footer() {
             <div>
               <h4 className="font-semibold mb-4 text-[#1d1d1f] dark:text-white">Product</h4>
               <ul className="space-y-2 text-sm text-[#1d1d1f]/70 dark:text-white/70">
-                <li><Link href="/?action=upload" className="hover:underline">Start Audit</Link></li>
-                <li><Link href="#" className="hover:underline">Documentation</Link></li>
-                <li><Link href="#" className="hover:underline">Metrics Explained</Link></li>
+                <li><Link href="/behavioral" className="hover:underline">Run Gemini Audit</Link></li>
+                <li><Link href="/prompts" className="hover:underline">Prompt Library</Link></li>
+                <li><Link href="/methodology" className="hover:underline">Methodology</Link></li>
+                <li><Link href="/behavioral-dashboard" className="hover:underline">Audit Dashboard</Link></li>
               </ul>
             </div>
             <div>
